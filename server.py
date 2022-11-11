@@ -18,6 +18,27 @@ DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2
 
 engine = create_engine(DATABASEURI)
 
+"""
+Accepted characters for validation:
+A-Z
+a-z
+0-9
+-
+"""
+def name_val(name):
+    pass
+def day_val(val):
+    pass
+def month_val(val):
+    pass
+def year_val(val):
+    pass
+def full_date_val(val):
+    pass
+def software_val(val):
+    pass
+
+
 @app.before_request
 def before_request():
     try:
