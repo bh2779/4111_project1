@@ -207,6 +207,41 @@ def add_software():
     g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
     return redirect('/softwares')
 
+@app.route('/roles')
+def roles():
+    cursor = g.conn.execute("SELECT role_id, role_name FROM role")
+    roles = []
+    for result in cursor:
+        roles.append([result['role_id'], result['role_name']])
+    cursor.close()
+    context = dict(data = roles)
+    return render_template("roles.html", **context)
+
+@app.route('/role/<int:role_id>')
+def role(role_id):
+    role_info = []
+    cursor = g.conn.execute("SELECT role_name FROM role WHERE role_id = " + str(role_id))
+    for result in cursor:
+        role_info.append(result['role_name'])
+    permissions = []
+    cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
+    for result in cursor:
+        permissions.append(result['rule'])
+    role_info.append(permissions)
+    cursor.close()
+    context = dict(data = role_info)
+    return render_template("role.html", **context)
+
+@app.route('/device-permissions')
+def device_permissions():
+    cursor = g.conn.execute("SELECT scope, groups FROM device_permissions")
+    dp = []
+    for result in cursor:
+        dp.append('Scope: ' + result['scope'] + ', Groups: ' + result['groups'])
+    cursor.close()
+    context = dict(data = dp)
+    return render_template("device_permissions.html", **context)
+
 if __name__ == "__main__":
     import click
 
