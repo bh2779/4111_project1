@@ -1,0 +1,56 @@
+<html>
+    <style>
+        body{ 
+            font-size: 15pt;
+            font-family: arial;
+            position: absolute;
+            left: 5%;
+            top: 5%;
+        }
+        .info {
+            margin-top: 15px;
+        }
+        .software {
+            margin-top: 10px;
+            font-size: 12pt;
+        }
+    </style>
+
+    <body>
+        <h1>{{data[0]}}</h1>
+
+        <div>
+            <div class="info">
+                <b>Location: </b>
+                {{data[1]}}
+            </div>
+            <div class="info">
+                <b>Department: </b>
+                {{data[2]}}
+            </div>
+            <div class="info">
+                <b>Position: </b>
+                {{data[4]}}
+            </div>
+            <div class="info">
+                <b>Email: </b>
+                {{data[3]}}
+            </div>
+            <div class="info">
+                <b>Access to Confidential Info: </b>
+                {{data[6]}}
+            </div>
+            <div class="info">
+                <b>Authorized Software: </b>
+                {% for n in data[7] %}
+                <div class="software">{{n}}</div>
+                {% endfor %}
+            </div>
+            <div class="info">
+                <b>Account created by: </b>
+                {{data[5]}}
+            </div>
+            <p><a href="/">Back to people</a></p>
+        </div>
+    </body>
+</html>

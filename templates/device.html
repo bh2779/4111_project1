@@ -1,0 +1,47 @@
+<html>
+    <style>
+        body{ 
+            font-size: 15pt;
+            font-family: arial;
+            position: absolute;
+            top: 5%;
+            left: 5%;
+        }
+        .info {
+            margin-top: 15px;
+        }
+        .perms {
+            margin-top: 40px;
+            margin-bottom: 15px;
+        }
+    </style>
+
+    <body>
+        <h1>{{data[0]}}</h1>
+
+        <div class="info">
+            <b>Operating System: </b>
+            {{data[1]}}
+        </div>
+        <div class="info">
+            <b>BIOS Version: </b>
+            {{data[2]}}
+        </div>
+        <div class="info">
+            <b>Last accessed: </b>
+            {{data[5]}}
+        </div>
+        <div>
+            <h3 class="perms">Permissions: </h3>
+            <div class="info">
+                <b>Scope: </b>
+                {{data[3]}}
+            </div>
+            <div class="info">
+                <b>Group: </b>
+                {{data[4]}}
+            </div>
+        </div>
+        <p><a href="/devices">Back to devices</a></p>
+    </body>
+</html>

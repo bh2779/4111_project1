@@ -1,0 +1,66 @@
+<html>
+  <style>
+    body{ 
+      position: absolute;
+      font-size: 15pt;
+      font-family: arial;
+      width: 100%;
+      top: 5%;
+    }
+    .employees {
+      position: absolute;
+      padding-left: 5%;
+    }
+    .new_employee {
+      position: absolute;
+      left: 50%;
+      width: 100%;
+      top: 0%;
+    }
+    .other_pages {
+      position: absolute;
+      padding-top: 34%;
+      left: 50%;
+    }
+    .button {
+      width: 60px;
+      height: 30px;
+      font-size: 15pt;
+      margin-left: 20%;
+    }
+  </style>
+
+
+<body>
+  <div class="employees">
+    <h1>Employees at 4111 LLC</h1>
+    <div>
+      {% for n in data %}
+      <div><a href="/profile/{{n[0]}}">{{n[1]}}</a></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="other_pages">
+    <p><a href="/devices">See devices</a></p>
+    <p><a href="/softwares">See softwares</a></p>
+  </div>
+
+  <div class="new_employee">
+    <h1>Create New Employee Account</h1>
+    <form method="POST" action="/add-profile">
+      <p>First name of new employee: <input type="text" name="first_name"></p>
+      <p>Last name of new employee: <input type="text" name="last_name"></p>
+      <p>Birthday of new employee (YYYY-MM-DD): <input type="text" name="dob"></p>
+      <p>Location of new employee: <input type="text" name="location"></p>
+      <p>Department of new employee: <input type="text" name="dept"></p>
+      <p>Role of new employee: <input type="text" name="role"></p>
+      <p>Person creating account: <input type="text" name="created_by"></p>
+      <input type="submit" value="Add" class="button">
+    </form>
+  </div>
+
+</body>
+
+
+</html>

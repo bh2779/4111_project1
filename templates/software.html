@@ -1,0 +1,32 @@
+<html>
+    <style>
+        body{ 
+            font-size: 15pt;
+            font-family: arial;
+            position: absolute;
+            top: 5%;
+            left: 5%;
+        }
+        .info {
+            margin-top: 15px;
+        }
+    </style>
+
+    <body>
+        <h1>{{data[0]}}</h1>
+
+        <div class="info">
+            <b>Version: </b>
+            {{data[1]}}
+        </div>
+        <div class="info">
+            <b>License: </b>
+            {{data[2]}}
+        </div>
+        <div class="info">
+            <b>Renew Date: </b>
+            {{data[5]}}
+        </div>
+        <p><a href="/softwares">Back to all software</a></p>
+    </body>
+</html>
