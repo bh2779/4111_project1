@@ -54,7 +54,25 @@
       <p>Birthday of new employee (YYYY-MM-DD): <input type="text" name="dob"></p>
       <p>Location of new employee: <input type="text" name="location"></p>
       <p>Department of new employee: <input type="text" name="dept"></p>
-      <p>Role of new employee: <input type="text" name="role"></p>
+      <p>
+        <label for="role">Role: </label>
+        <select name="role" id="role">
+          <option value="Sales Manager">Sales Manager</option>
+          <option value="HR Administrator">HR Administrator</option>
+          <option value="HR Generalist">HR Generalist</option>
+          <option value="Network Administrator">Network Administrator</option>
+          <option value="Web Administrator">Web Administrator</option>
+          <option value="Database Administrator">Database Administrator</option>
+          <option value="Hardware Administrator">Hardware Administrator</option>
+          <option value="Sales Default">Sales Default</option>
+          <option value="HR Default">HR Default</option>
+          <option value="IT Default">IT Default</option>
+          <option value="Sales Director">Sales Director</option>
+          <option value="HR Director">HR Director</option>
+          <option value="IT Director">IT Director</option>
+        </select>
+        <!-- Role of new employee: <input type="text" name="role"> -->
+      </p>
       <p>Person creating account: <input type="text" name="created_by"></p>
       <input type="submit" value="Add" class="button">
     </form>

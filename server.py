@@ -98,36 +98,39 @@ def profile(userid):
         user_info.append(result['first_name'] + ' ' + result['last_name'])
         user_info.append(result['location'])
         user_info.append(result['department'])
-    cursor = g.conn.execute("SELECT account_id, email FROM account WHERE user_id = " + str(userid))
-    account_id = 0
+    cursor = g.conn.execute("SELECT account_id, username, email FROM account WHERE user_id = " + str(userid))
+    accounts = []
     for result in cursor:
-        account_id = result['account_id']
-        user_info.append(result['email'])
-    cursor = g.conn.execute("SELECT R.role_id, role_name FROM role AS R JOIN belongs_to AS B ON R.role_id = B.role_id WHERE account_id = " + str(account_id))
-    role_id = 0
-    for result in cursor:
-        role_id = result['role_id']
-        user_info.append(result['role_name'])
-    cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = " + str(userid))
-    for result in cursor:
-        user_info.append(result['created_by'])
-    cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
-    access = False
-    for result in cursor:
-        if result['rule'] == 'confidential info':
-            access = True
-            break
-    if access:
-        user_info.append('True')
-    else:
-        user_info.append('False')
-    cursor = g.conn.execute("SELECT name, duration FROM software AS S JOIN authorized AS A ON S.sid = A.sid WHERE account_id = " + str(account_id))
-    softwares = []
-    for result in cursor:
-        softwares.append(result['name'] + ' (authorized until ' + str(result['duration']) + ')')
-    user_info.append(softwares)
+        accounts.append([result['account_id'], result['username'], result['email']])
+    user_info.append(accounts)
+    for account in user_info[3]:
+        account_id = account[0]
+        cursor = g.conn.execute("SELECT R.role_id, role_name, last_reviewed FROM role AS R JOIN belongs_to AS B ON R.role_id = B.role_id WHERE account_id = " + str(account_id))
+        role_id = 0
+        for result in cursor:
+            role_id = result['role_id']
+            account.append(result['role_name'] + ' (last reviewed on ' + str(result['last_reviewed']) + ')')
+        cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = " + str(userid))
+        for result in cursor:
+            account.append(result['created_by'])
+        cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
+        access = False
+        for result in cursor:
+            if result['rule'] == 'confidential info':
+                access = True
+                break
+        if access:
+            account.append('True')
+        else:
+            account.append('False')
+        cursor = g.conn.execute("SELECT name, duration FROM software AS S JOIN authorized AS A ON S.sid = A.sid WHERE account_id = " + str(account_id))
+        softwares = []
+        for result in cursor:
+            softwares.append(result['name'] + ' (authorized until ' + str(result['duration']) + ')')
+        account.append(softwares)
+        print(account)
     cursor.close()
-    print(user_info)
+    # print(user_info)
     context = dict(data = user_info)
     return render_template("profile.html", **context)
 
