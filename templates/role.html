@@ -1,0 +1,26 @@
+<html>
+    <style>
+        body{ 
+            font-size: 15pt;
+            font-family: arial;
+            position: absolute;
+            top: 5%;
+            left: 5%;
+        }
+        .info {
+            margin-top: 15px;
+        }
+    </style>
+
+    <body>
+        <h1>{{data[0]}} Permissions:</h1>
+
+        {% for n in data[1] %}
+        <div class="info">
+            {{n}}
+        </div>
+        {% endfor %}
+
+        <p><a href="/roles">Back to all roles</a></p>
+    </body>
+</html>
