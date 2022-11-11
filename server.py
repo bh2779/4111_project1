@@ -193,6 +193,17 @@ def software(sid):
     context = dict(data = software_info)
     return render_template("software.html", **context)
 
+@app.route('/add-software', methods=['POST'])
+def add_software():
+    name = request.form['name']
+    print(type(name))
+    version = request.form['version']
+    license = request.form['license']
+    renew_date = request.form['renew_date']
+    cmd = 'INSERT INTO software(name, version, license, renew_date) VALUES (:name, :version, :license, :renew_date)'
+    g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
+    return redirect('/softwares')
+
 if __name__ == "__main__":
     import click
 
