@@ -4,7 +4,7 @@ from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
 import random
 import string
-from datetime import date
+from datetime import date, datetime
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -25,18 +25,87 @@ a-z
 0-9
 -
 """
+
+
+# takes in a string and checks if the characters are valid
 def name_val(name):
-    pass
+    for letter in name:
+        if letter not in string.ascii_letters:
+            return False, "Invalid characters in input. Please only use upper or lowercase letters."
+    return True, "OK"
+
+
+# takes in a string of integers and confirms they are a valid day entry
 def day_val(val):
-    pass
+    # check length of input
+    if len(val) == 0 or len(val) > 2:
+        return False, "Please enter a valid number between 01-31."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, "Please enter a valid number between 01-31."
+    # check range
+    if int(val) < 1 or int(val) > 31:
+        return False, "Please enter a valid number between 01-31."
+    # if length 1, add 0 to front
+    if len(val) == 1:
+        return True, "0" + val
+
+
+# takes in a string of integers and confirms they are a valid month entry
 def month_val(val):
-    pass
+    # check length of input
+    if len(val) == 0 or len(val) > 2:
+        return False, "Please enter a valid number between 01-12."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, "Please enter a valid number between 01-12."
+    # check range
+    if int(val) < 1 or int(val) > 12:
+        return False, "Please enter a valid number between 01-12."
+    # if length 1, add 0 to front
+    if len(val) == 1:
+        return True, "0" + val
+
+
 def year_val(val):
-    pass
-def full_date_val(val):
-    pass
+    year = date.today().year
+    # check length of input
+    if len(val) != 4:
+        return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    # check range
+    if int(val) < 1900 or int(val) > year:
+        return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    return True, "OK"
+
+
+# takes in year, month, day and confirms it is a valid date via the datetime library
+# probably could have been used to sanity check input too, but oh well ¯\_(ツ)_/¯
+def full_date_val(year, month, day):
+    valid_date = None
+    try:
+        input_date = datetime(year=year, month=month, day=day)
+        valid_date = True
+    except ValueError:
+        valid_date = False
+    if valid_date == False:
+        return False, "Date is not valid."
+    else:
+        return True, "OK"
+
+
+# takes in name of software name and confirms all characters are valid
 def software_val(val):
-    pass
+    for ch in val:
+        if ch not in (string.ascii_letters + string.digits + "-"):
+            return False, "Invalid characters entered."
+
+    return True, "OK"
 
 
 @app.before_request
