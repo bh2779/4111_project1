@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, flash
 import random
 import string
 from datetime import date, datetime
@@ -100,7 +100,7 @@ def full_date_val(year, month, day):
 
 
 # takes in name of software name and confirms all characters are valid
-def software_val(val):
+def general_val(val):
     for ch in val:
         if ch not in (string.ascii_letters + string.digits + "-"):
             return False, "Invalid characters entered."
@@ -139,6 +139,7 @@ def add_profile():
     first_name = request.form['first_name']
     last_name = request.form['last_name']
     dob = request.form['dob']
+    year = request.form['year']
     location = request.form['location']
     dept = request.form['dept']
     role = request.form['role']
