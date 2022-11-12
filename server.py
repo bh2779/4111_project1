@@ -240,12 +240,14 @@ def profile(userid):
             role_id = result['role_id']
             account.append(result['role_name'] + ' (last reviewed on ' + str(result['last_reviewed']) + ')')
         cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = " + str(userid))
+        created_by = ""
         for result in cursor:
-            account.append(result['created_by'])
+            created_by = result['created_by']
+        account.append(created_by)
         cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
         access = False
         for result in cursor:
-            if result['rule'] == 'confidential info':
+            if result['rule'] == 'confidential info access':
                 access = True
                 break
         if access:
@@ -258,17 +260,54 @@ def profile(userid):
             softwares.append(result['name'] + ' (authorized until ' + str(result['duration']) + ')')
         account.append(softwares)
     cursor.close()
+    print(user_info)
     context = dict(data = user_info)
     return render_template("profile.html", **context)
 
-@app.route('/account/<int:account_id>/delete', methods = ['POST'])
+@app.route('/account/<int:user_id>/add', methods=['POST'])
+def add_account(user_id):
+    role = request.form['role']
+    created_by = request.form['created_by']
+    created_date = date.today()
+    cursor = g.conn.execute("SELECT first_name, last_name FROM users WHERE user_id = " + str(user_id))
+    first_name = ''
+    last_name = ''
+    for result in cursor:
+        first_name = result['first_name']
+        last_name = result['last_name']
+    username = first_name[0].lower() + last_name[0].lower() + str(random.randrange(0,999))
+    email = username + '@company.com'
+    letters = string.ascii_letters
+    password = ''.join(random.choice(letters) for i in range(8))
+    cmd = 'INSERT INTO account(email, password, username, created_date, user_id) VALUES (:email, :password, :username, :created_date, :user_id)'
+    g.conn.execute(text(cmd), email = email, password = password, username = username, created_date = created_date, user_id = user_id)
+    cursor = g.conn.execute("SELECT role_id FROM role WHERE role_name LIKE '" + role + "'")
+    role_id = 0
+    for result in cursor:
+        role_id = result['role_id']
+    cursor = g.conn.execute('SELECT account_id FROM account WHERE user_id = ' + str(user_id) + " AND username LIKE '" + username + "' AND password LIKE '" + password + "'")
+    account_id = 0
+    for result in cursor:
+        account_id = result['account_id']
+    cmd = 'INSERT INTO belongs_to(account_id, role_id, last_reviewed) VALUES (:account_id, :role_id, :last_reviewed)'
+    g.conn.execute(text(cmd), account_id = account_id, role_id = role_id, last_reviewed = created_date)
+    cmd = 'INSERT INTO assigned(account_id, user_id, created_by) VALUES (:account_id, :user_id, :created_by)'
+    g.conn.execute(text(cmd), account_id = account_id, user_id = user_id, created_by = created_by)
+    cursor.close()
+    return profile(user_id)
+
+@app.route('/account/<int:account_id>/delete', methods=['POST'])
 def delete_account(account_id):
+    cursor = g.conn.execute("SELECT user_id FROM account WHERE account_id = " + str(account_id))
+    user_id = 0
+    for result in cursor:
+        user_id = result['user_id']
     g.conn.execute("DELETE FROM belongs_to WHERE account_id = " + str(account_id))
     g.conn.execute("DELETE FROM accesses WHERE account_id = " + str(account_id))
     g.conn.execute("DELETE FROM assigned WHERE account_id = " + str(account_id))
     g.conn.execute("DELETE FROM authorized WHERE account_id = " + str(account_id))
     g.conn.execute("DELETE FROM account WHERE account_id = " + str(account_id))
-    return redirect('/')
+    return profile(user_id)
 
 @app.route('/user/<int:user_id>/delete', methods=['POST'])
 def delete_user(user_id):

@@ -48,13 +48,20 @@
   </div>
 
   <div class="new_employee">
-    <h1>Create New Employee Account</h1>
+    <h1>Create New User</h1>
     <form method="POST" action="/add-profile">
       <p>First name of new employee: <input type="text" name="first_name"></p>
       <p>Last name of new employee: <input type="text" name="last_name"></p>
       <p>Birthday of new employee (YYYY-MM-DD): <input type="text" name="dob"></p>
       <p>Location of new employee: <input type="text" name="location"></p>
-      <p>Department of new employee: <input type="text" name="dept"></p>
+      <p>
+        <label for="dept">Department of new employee: </label>
+        <select name="dept" id="dept">
+          <option value="Sales">Sales</option>
+          <option value="HR">HR</option>
+          <option value="IT">IT</option>
+        </select>
+      </p>
       <p>
         <label for="role">Role: </label>
         <select name="role" id="role">
