@@ -14,34 +14,40 @@
             margin-top: 40px;
             margin-bottom: 15px;
         }
+        .button {
+            margin-top: 20px;
+        }
     </style>
 
     <body>
-        <h1>{{data[0]}}</h1>
+        <h1>{{data[1]}}</h1>
 
         <div class="info">
             <b>Operating System: </b>
-            {{data[1]}}
-        </div>
-        <div class="info">
-            <b>BIOS Version: </b>
             {{data[2]}}
         </div>
         <div class="info">
+            <b>BIOS Version: </b>
+            {{data[3]}}
+        </div>
+        <div class="info">
             <b>Last accessed: </b>
-            {{data[5]}}
+            {{data[6]}}
         </div>
         <div>
             <h3 class="perms">Permissions: </h3>
             <div class="info">
                 <b>Scope: </b>
-                {{data[3]}}
+                {{data[4]}}
             </div>
             <div class="info">
                 <b>Group: </b>
-                {{data[4]}}
+                {{data[5]}}
             </div>
         </div>
+        <form method="POST" action="/device/{{data[0]}}/delete">
+            <input type="submit" value="Delete Device" class="button">
+        </form>
         <p><a href="/devices">Back to devices</a></p>
     </body>
 </html>

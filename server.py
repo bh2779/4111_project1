@@ -296,6 +296,7 @@ def device(deviceid):
     cursor = g.conn.execute("SELECT * FROM device WHERE device_id = " + str(deviceid))
     device_info = []
     for result in cursor:
+        device_info.append(result['device_id'])
         device_info.append(result['vendor'] + ' ' + result['device_type'])
         device_info.append(result['operating_system'])
         device_info.append(result['bios_version'])
@@ -320,6 +321,14 @@ def device(deviceid):
     context = dict(data = device_info)
     return render_template("device.html", **context)
 
+@app.route('/device/<int:device_id>/delete', methods=['POST'])
+def delete_device(device_id):
+    g.conn.execute("DELETE FROM accesses WHERE device_id = " + str(device_id))
+    g.conn.execute("DELETE FROM defines WHERE device_id = " + str(device_id))
+    g.conn.execute("DELETE FROM accesses WHERE device_id = " + str(device_id))
+    g.conn.execute("DELETE FROM devices WHERE device_id = " + str(device_id))
+    return redirect('/devices')
+
 @app.route('/softwares')
 def softwares():
     cursor = g.conn.execute("SELECT sid, name FROM software")
@@ -333,7 +342,7 @@ def softwares():
 @app.route('/software/<int:sid>')
 def software(sid):
     cursor = g.conn.execute("SELECT * FROM software WHERE sid = " + str(sid))
-    software_info = []
+    software_info = [sid]
     for result in cursor:
         software_info.append(result['name'])
         software_info.append(result['version'])
@@ -356,14 +365,16 @@ def add_software():
         return redirect('/softwares')
     renew_date = request.form['renew_date']
     year, month, day = renew_date.split('-')
-    if not year_val(year):
-        return redirect('/')
-    if not month_val(month):
-        return redirect('/')
-    if not day_val(day):
-        return redirect('/')
+    if not full_date_val(year, month, day):
+        return redirect('/softwares')
     cmd = 'INSERT INTO software(name, version, license, renew_date) VALUES (:name, :version, :license, :renew_date)'
     g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
+    return redirect('/softwares')
+
+@app.route('/software/<int:sid>/delete', methods=['POST'])
+def delete_software(sid):
+    g.conn.execute("DELETE FROM authorized WHERE sid = " + str(sid))
+    g.conn.execute("DELETE FROM software WHERE sid = " + str(sid))
     return redirect('/softwares')
 
 @app.route('/roles')
