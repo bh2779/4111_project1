@@ -14,21 +14,24 @@
             margin-top: 10px;
             font-size: 12pt;
         }
+        .button {
+            margin-top: 10px;
+        }
     </style>
 
     <body>
-        <h1>{{data[0]}}</h1>
+        <h1>{{data[1]}}</h1>
 
         <div>
             <div class="info">
                 <b>Location: </b>
-                {{data[1]}}
+                {{data[2]}}
             </div>
             <div class="info">
                 <b>Department: </b>
-                {{data[2]}}
+                {{data[3]}}
             </div>
-            {% for n in data[3] %}
+            {% for n in data[4] %}
             <h2>Account {{n[1]}}</h2>
             <div class="info">
                 <b>Position: </b>
@@ -52,7 +55,13 @@
                 <b>Account created by: </b>
                 {{n[4]}}
             </div>
+            <form method="POST" action="/account/{{n[0]}}/delete">
+                <input type="submit" value="Delete Account" class="button">
+            </form>
             {% endfor %}
+            <form method="POST" action="/user/{{data[0]}}/delete">
+                <input type="submit" value="Delete User" class="button">
+            </form>
             <p><a href="/">Back to people</a></p>
         </div>
     </body>

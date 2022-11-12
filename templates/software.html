@@ -10,23 +10,29 @@
         .info {
             margin-top: 15px;
         }
+        .button {
+            margin-top: 20px;
+        }
     </style>
 
     <body>
-        <h1>{{data[0]}}</h1>
+        <h1>{{data[1]}}</h1>
 
         <div class="info">
             <b>Version: </b>
-            {{data[1]}}
-        </div>
-        <div class="info">
-            <b>License: </b>
             {{data[2]}}
         </div>
         <div class="info">
-            <b>Renew Date: </b>
+            <b>License: </b>
             {{data[3]}}
         </div>
+        <div class="info">
+            <b>Renew Date: </b>
+            {{data[4]}}
+        </div>
+        <form method="POST" action="/software/{{data[0]}}/delete">
+            <input type="submit" value="Delete Software" class="button">
+        </form>
         <p><a href="/softwares">Back to all software</a></p>
     </body>
 </html>
