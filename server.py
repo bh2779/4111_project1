@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, flash
 import random
 import string
 from datetime import date, datetime
@@ -50,6 +50,7 @@ def day_val(val):
     # if length 1, add 0 to front
     if len(val) == 1:
         return True, "0" + val
+    return True, "OK"
 
 
 # takes in a string of integers and confirms they are a valid month entry
@@ -67,6 +68,7 @@ def month_val(val):
     # if length 1, add 0 to front
     if len(val) == 1:
         return True, "0" + val
+    return True, "OK"
 
 
 def year_val(val):
@@ -98,11 +100,10 @@ def full_date_val(year, month, day):
     else:
         return True, "OK"
 
-
 # takes in location and confirms all characters are valid
 def location_val(val):
     for ch in val:
-        if ch not in (string.ascii_letters + string.digits + ' '):
+        if ch not in (string.ascii_letters + string.digits + " " + "-"):
             return False, "Invalid characters entered."
 
     return True, "OK"
@@ -122,7 +123,6 @@ def version_val(val):
             return False, "Invalid characters entered."
 
     return True, "OK"
-
 
 @app.before_request
 def before_request():
@@ -153,18 +153,26 @@ def index():
 @app.route('/add-profile', methods=['POST'])
 def add_profile():
     first_name = request.form['first_name']
-    if not name_val(first_name):
+    if not name_val(first_name)[0]:
         return redirect('/')
     last_name = request.form['last_name']
-    if not name_val(last_name):
+    if not name_val(last_name)[0]:
         return redirect('/')
     dob = request.form['dob']
+
     year, month, day = dob.split('-')
+    if not year_val(year)[0]:
+        return redirect('/')
+    if not month_val(month)[0]:
+        return redirect('/')
+    if not day_val(day)[0]:
+        return redirect('/')
     dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
     if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
         return redirect('/')
+
     location = request.form['location']
-    if not location_val(location):
+    if not location_val(location)[0]:
         return redirect('/')
     dept = request.form['dept']
     if dept not in ['Sales', 'HR', 'IT']:
