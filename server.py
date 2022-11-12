@@ -99,6 +99,7 @@ def full_date_val(year, month, day):
         return True, "OK"
 
 
+
 # takes in location and confirms all characters are valid
 def location_val(val):
     for ch in val:
@@ -122,7 +123,6 @@ def version_val(val):
             return False, "Invalid characters entered."
 
     return True, "OK"
-
 
 @app.before_request
 def before_request():
