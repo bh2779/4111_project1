@@ -167,6 +167,9 @@ def add_profile():
         return redirect('/')
     if not day_val(day)[0]:
         return redirect('/')
+    dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
+    if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
+        return redirect('/')
 
     location = request.form['location']
     if not location_val(location)[0]:
