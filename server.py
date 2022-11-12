@@ -4,7 +4,7 @@ from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
 import random
 import string
-from datetime import date
+from datetime import date, datetime
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -17,6 +17,112 @@ DB_SERVER = "w4111project1part2db.cisxo09blonu.us-east-1.rds.amazonaws.com"
 DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2"
 
 engine = create_engine(DATABASEURI)
+
+"""
+Accepted characters for validation:
+A-Z
+a-z
+0-9
+-
+"""
+
+
+# takes in a string and checks if the characters are valid
+def name_val(name):
+    for letter in name:
+        if letter not in string.ascii_letters:
+            return False, "Invalid characters in input. Please only use upper or lowercase letters."
+    return True, "OK"
+
+
+# takes in a string of integers and confirms they are a valid day entry
+def day_val(val):
+    # check length of input
+    if len(val) == 0 or len(val) > 2:
+        return False, "Please enter a valid number between 01-31."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, "Please enter a valid number between 01-31."
+    # check range
+    if int(val) < 1 or int(val) > 31:
+        return False, "Please enter a valid number between 01-31."
+    # if length 1, add 0 to front
+    if len(val) == 1:
+        return True, "0" + val
+
+
+# takes in a string of integers and confirms they are a valid month entry
+def month_val(val):
+    # check length of input
+    if len(val) == 0 or len(val) > 2:
+        return False, "Please enter a valid number between 01-12."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, "Please enter a valid number between 01-12."
+    # check range
+    if int(val) < 1 or int(val) > 12:
+        return False, "Please enter a valid number between 01-12."
+    # if length 1, add 0 to front
+    if len(val) == 1:
+        return True, "0" + val
+
+
+def year_val(val):
+    year = date.today().year
+    # check length of input
+    if len(val) != 4:
+        return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    # check if all characters are valid digits
+    for ch in val:
+        if ch not in string.digits:
+            return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    # check range
+    if int(val) < 1900 or int(val) > year:
+        return False, f"Please enter a valid 4 digit number between 1900 and {year}."
+    return True, "OK"
+
+
+# takes in year, month, day and confirms it is a valid date via the datetime library
+# probably could have been used to sanity check input too, but oh well ¯\_(ツ)_/¯
+def full_date_val(year, month, day):
+    valid_date = None
+    try:
+        input_date = datetime(year=int(year), month=int(month), day=int(day))
+        valid_date = True
+    except ValueError:
+        valid_date = False
+    if valid_date == False:
+        return False, "Date is not valid."
+    else:
+        return True, "OK"
+
+
+# takes in location and confirms all characters are valid
+def location_val(val):
+    for ch in val:
+        if ch not in (string.ascii_letters + string.digits):
+            return False, "Invalid characters entered."
+
+    return True, "OK"
+
+# takes in name of software and confirms all characters are valid
+def software_val(val):
+    for ch in val:
+        if ch not in (string.ascii_letters + string.digits + "-"):
+            return False, "Invalid characters entered."
+
+    return True, "OK"
+
+# takes in software version and confirms all characters are valid
+def version_val(val):
+    for ch in val:
+        if ch not in (string.ascii_letters + string.digits + "."):
+            return False, "Invalid characters entered."
+
+    return True, "OK"
+
 
 @app.before_request
 def before_request():
@@ -47,10 +153,25 @@ def index():
 @app.route('/add-profile', methods=['POST'])
 def add_profile():
     first_name = request.form['first_name']
+    if not name_val(first_name):
+        return redirect('/')
     last_name = request.form['last_name']
+    if not name_val(last_name):
+        return redirect('/')
     dob = request.form['dob']
+    year, month, day = dob.split('-')
+    if not year_val(year):
+        return redirect('/')
+    if not month_val(month):
+        return redirect('/')
+    if not day_val(day):
+        return redirect('/')
     location = request.form['location']
+    if not location_val(location):
+        return redirect('/')
     dept = request.form['dept']
+    if dept not in ['Sales', 'HR', 'IT']:
+        return redirect('/')
     role = request.form['role']
     all_roles = []
     cursor = g.conn.execute('SELECT role_name FROM role')
@@ -60,6 +181,8 @@ def add_profile():
     if role not in all_roles:
         return redirect('/')
     created_by = request.form['created_by']
+    if not name_val(created_by):
+        return redirect('/')
     cmd = 'INSERT INTO users(first_name, last_name, dob, location, department) VALUES (:first_name, :last_name, :dob, :location, :dept)'
     g.conn.execute(text(cmd), first_name = first_name, last_name = last_name, dob = dob, location = location, dept = dept)
     cmd = 'SELECT user_id FROM users WHERE first_name LIKE \'' + first_name + '\' AND last_name LIKE \'' + last_name + '\''
@@ -95,6 +218,7 @@ def profile(userid):
     cursor = g.conn.execute("SELECT * FROM users WHERE user_id = " + str(userid))
     user_info = []
     for result in cursor:
+        user_info.append(result['user_id'])
         user_info.append(result['first_name'] + ' ' + result['last_name'])
         user_info.append(result['location'])
         user_info.append(result['department'])
@@ -103,7 +227,7 @@ def profile(userid):
     for result in cursor:
         accounts.append([result['account_id'], result['username'], result['email']])
     user_info.append(accounts)
-    for account in user_info[3]:
+    for account in user_info[4]:
         account_id = account[0]
         cursor = g.conn.execute("SELECT R.role_id, role_name, last_reviewed FROM role AS R JOIN belongs_to AS B ON R.role_id = B.role_id WHERE account_id = " + str(account_id))
         role_id = 0
@@ -128,11 +252,34 @@ def profile(userid):
         for result in cursor:
             softwares.append(result['name'] + ' (authorized until ' + str(result['duration']) + ')')
         account.append(softwares)
-        print(account)
     cursor.close()
-    # print(user_info)
     context = dict(data = user_info)
     return render_template("profile.html", **context)
+
+@app.route('/account/<int:account_id>/delete', methods = ['POST'])
+def delete_account(account_id):
+    g.conn.execute("DELETE FROM belongs_to WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM accesses WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM assigned WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM authorized WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM account WHERE account_id = " + str(account_id))
+    return redirect('/')
+
+@app.route('/user/<int:user_id>/delete', methods=['POST'])
+def delete_user(user_id):
+    account_ids = []
+    cursor = g.conn.execute("SELECT account_id FROM account WHERE user_id = " + str(user_id))
+    for result in cursor:
+        account_ids.append(result['account_id'])
+    for account_id in account_ids:
+        g.conn.execute("DELETE FROM belongs_to WHERE account_id = " + str(account_id))
+        g.conn.execute("DELETE FROM accesses WHERE account_id = " + str(account_id))
+        g.conn.execute("DELETE FROM assigned WHERE account_id = " + str(account_id))
+        g.conn.execute("DELETE FROM authorized WHERE account_id = " + str(account_id))
+        g.conn.execute("DELETE FROM account WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM account WHERE user_id = " + str(user_id))
+    g.conn.execute("DELETE FROM users WHERE user_id = " + str(user_id))
+    return redirect('/')
 
 @app.route('/devices')
 def devices():
@@ -199,10 +346,22 @@ def software(sid):
 @app.route('/add-software', methods=['POST'])
 def add_software():
     name = request.form['name']
-    print(type(name))
+    if not software_val(name):
+        return redirect('/softwares')
     version = request.form['version']
+    if not version_val(version):
+        return redirect('/softwares')
     license = request.form['license']
+    if not name_val(license):
+        return redirect('/softwares')
     renew_date = request.form['renew_date']
+    year, month, day = renew_date.split('-')
+    if not year_val(year):
+        return redirect('/')
+    if not month_val(month):
+        return redirect('/')
+    if not day_val(day):
+        return redirect('/')
     cmd = 'INSERT INTO software(name, version, license, renew_date) VALUES (:name, :version, :license, :renew_date)'
     g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
     return redirect('/softwares')
