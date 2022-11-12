@@ -103,7 +103,7 @@ def full_date_val(year, month, day):
 # takes in location and confirms all characters are valid
 def location_val(val):
     for ch in val:
-        if ch not in (string.ascii_letters + string.digits):
+        if ch not in (string.ascii_letters + string.digits + ' '):
             return False, "Invalid characters entered."
 
     return True, "OK"
@@ -160,11 +160,8 @@ def add_profile():
         return redirect('/')
     dob = request.form['dob']
     year, month, day = dob.split('-')
-    if not year_val(year):
-        return redirect('/')
-    if not month_val(month):
-        return redirect('/')
-    if not day_val(day):
+    dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
+    if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
         return redirect('/')
     location = request.form['location']
     if not location_val(location):
