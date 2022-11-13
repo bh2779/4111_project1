@@ -365,6 +365,14 @@ def device(deviceid):
     context = dict(data = device_info)
     return render_template("device.html", **context)
 
+# @app.route('/add-device', methods=['POST'])
+# def add_device():
+#     device_type = request.form['device_type']
+#     operating_system = request.form['operating_system']
+#     purchase_date = request.form['purchase_date']
+#     bios_version = request.form['bios_version']
+#     vendor = request.form['vendor']
+
 @app.route('/device/<int:device_id>/delete', methods=['POST'])
 def delete_device(device_id):
     g.conn.execute("DELETE FROM accesses WHERE device_id = " + str(device_id))
