@@ -24,14 +24,15 @@ A-Z
 a-z
 0-9
 -
+" "
 """
 
 
 # takes in a string and checks if the characters are valid
 def name_val(name):
     for letter in name:
-        if letter not in string.ascii_letters:
-            return False, "Invalid characters in input. Please only use upper or lowercase letters."
+        if letter not in string.ascii_letters + " " + "-":
+            return False, "Invalid characters in input. Please only use upper or lowercase letters, space, or -."
     return True, "OK"
 
 
@@ -50,7 +51,7 @@ def day_val(val):
     # if length 1, add 0 to front
     if len(val) == 1:
         return True, "0" + val
-    return True, "OK"
+    return True, val
 
 
 # takes in a string of integers and confirms they are a valid month entry
@@ -68,7 +69,7 @@ def month_val(val):
     # if length 1, add 0 to front
     if len(val) == 1:
         return True, "0" + val
-    return True, "OK"
+    return True, val
 
 
 def year_val(val):
@@ -100,6 +101,7 @@ def full_date_val(year, month, day):
     else:
         return True, "OK"
 
+
 # takes in location and confirms all characters are valid
 def location_val(val):
     for ch in val:
@@ -107,6 +109,7 @@ def location_val(val):
             return False, "Invalid characters entered."
 
     return True, "OK"
+
 
 # takes in name of software and confirms all characters are valid
 def software_val(val):
@@ -116,6 +119,7 @@ def software_val(val):
 
     return True, "OK"
 
+
 # takes in software version and confirms all characters are valid
 def version_val(val):
     for ch in val:
@@ -123,6 +127,14 @@ def version_val(val):
             return False, "Invalid characters entered."
 
     return True, "OK"
+
+
+def created_by_val(val):
+    for ch in val:
+        if ch not in (string.ascii_letters + string.digits + " " + "-"):
+            return False, "Invalid characters entered."
+    return True, "OK"
+
 
 @app.before_request
 def before_request():
@@ -133,6 +145,7 @@ def before_request():
         import traceback; traceback.print_exc()
         g.conn = None
 
+
 @app.teardown_request
 def teardown_request(exception):
     try:
@@ -140,8 +153,10 @@ def teardown_request(exception):
     except Exception as e:
         pass
 
+
 @app.route('/')
 def index():
+    # populate user names on main page
     cursor = g.conn.execute("SELECT user_id, first_name, last_name FROM users")
     names = []
     for result in cursor:
@@ -150,8 +165,10 @@ def index():
     context = dict(data = names)
     return render_template("index.html", **context)
 
+
 @app.route('/add-profile', methods=['POST'])
 def add_profile():
+    # user inputs and validation
     first_name = request.form['first_name']
     if not name_val(first_name)[0]:
         return redirect('/')
@@ -160,12 +177,22 @@ def add_profile():
         return redirect('/')
     dob = request.form['dob']
 
-    year, month, day = dob.split('-')
+    try:
+        year, month, day = dob.split('-')
+    except:
+        return redirect('/')
     if not year_val(year)[0]:
         return redirect('/')
-    if not month_val(month)[0]:
+    # expanding these since the function fixes single value entries
+    # if not month_val(month)[0]:
+    #     return redirect('/')
+    # if not day_val(day)[0]:
+    #     return redirect('/')
+    month_status, month = month_val(month)
+    if not month_status:
         return redirect('/')
-    if not day_val(day)[0]:
+    day_status, day = day_val(day)
+    if not day_status:
         return redirect('/')
     dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
     if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
@@ -185,11 +212,16 @@ def add_profile():
     cursor.close()
     if role not in all_roles:
         return redirect('/')
+
+    # do we want to modify created by to be a list of the admins? (turns out it is a LOT of work)
     created_by = request.form['created_by']
-    if not name_val(created_by):
+    if not created_by_val(created_by)[0]:
         return redirect('/')
+
+    # insert new user into database
     cmd = 'INSERT INTO users(first_name, last_name, dob, location, department) VALUES (:first_name, :last_name, :dob, :location, :dept)'
     g.conn.execute(text(cmd), first_name = first_name, last_name = last_name, dob = dob, location = location, dept = dept)
+    # generate new account information for users
     cmd = 'SELECT user_id FROM users WHERE first_name LIKE \'' + first_name + '\' AND last_name LIKE \'' + last_name + '\''
     cursor = g.conn.execute(cmd)
     userid = 0
@@ -200,6 +232,7 @@ def add_profile():
     letters = string.ascii_letters
     password = ''.join(random.choice(letters) for i in range(8))
     created_date = date.today()
+    # insert into account table
     cmd = 'INSERT INTO account(email, password, username, created_date, user_id) VALUES (:email, :password, :username, :created_date, :user_id)'
     g.conn.execute(text(cmd), email = email, password = password, username = username, created_date = created_date, user_id = userid)
     cmd = 'SELECT account_id FROM account WHERE user_id = ' + str(userid)
@@ -207,17 +240,21 @@ def add_profile():
     accountid = 0
     for result in cursor:
         accountid = result['account_id']
+    # insert into assigned
     cmd = 'INSERT INTO assigned(account_id, user_id, created_by) VALUES (:account_id, :user_id, :created_by)'
     g.conn.execute(text(cmd), account_id = accountid, user_id = userid, created_by = created_by)
     cursor = g.conn.execute('SELECT role_id FROM role WHERE role_name LIKE \'' + role + '\'')
     roleid = 0
     for result in cursor:
         roleid = result['role_id']
+    # insert into belongs_to
     cmd = 'INSERT INTO belongs_to(account_id, role_id, last_reviewed) VALUES (:account_id, :role_id, :last_reviewed)'
     g.conn.execute(text(cmd), account_id = accountid, role_id = roleid, last_reviewed = created_date)
     cursor.close()
     return redirect('/')
 
+
+#displays individual users's information
 @app.route('/profile/<int:userid>')
 def profile(userid):
     cursor = g.conn.execute("SELECT * FROM users WHERE user_id = " + str(userid))
@@ -264,10 +301,21 @@ def profile(userid):
     context = dict(data = user_info)
     return render_template("profile.html", **context)
 
+
+# used to add a new account
 @app.route('/account/<int:user_id>/add', methods=['POST'])
 def add_account(user_id):
     role = request.form['role']
+    all_roles = []
+    cursor = g.conn.execute('SELECT role_name FROM role')
+    for result in cursor:
+        all_roles.append(result['role_name'])
+    cursor.close()
+    if role not in all_roles:
+        return redirect('/')
     created_by = request.form['created_by']
+    if not created_by_val(created_by)[0]:
+        return redirect('/account/<int:user_id>/add')
     created_date = date.today()
     cursor = g.conn.execute("SELECT first_name, last_name FROM users WHERE user_id = " + str(user_id))
     first_name = ''
@@ -399,17 +447,20 @@ def software(sid):
 @app.route('/add-software', methods=['POST'])
 def add_software():
     name = request.form['name']
-    if not software_val(name):
+    if not software_val(name)[0]:
         return redirect('/softwares')
     version = request.form['version']
-    if not version_val(version):
+    if not version_val(version)[0]:
         return redirect('/softwares')
     license = request.form['license']
-    if not name_val(license):
+    if not name_val(license)[0]:
         return redirect('/softwares')
     renew_date = request.form['renew_date']
-    year, month, day = renew_date.split('-')
-    if not full_date_val(year, month, day):
+    try:
+        year, month, day = renew_date.split('-')
+    except:
+        return redirect('/softwares')
+    if not full_date_val(year, month, day)[0]:
         return redirect('/softwares')
     cmd = 'INSERT INTO software(name, version, license, renew_date) VALUES (:name, :version, :license, :renew_date)'
     g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
@@ -455,6 +506,17 @@ def device_permissions():
     cursor.close()
     context = dict(data = dp)
     return render_template("device_permissions.html", **context)
+
+@app.route('/role-permissions')
+def role_permissions():
+    cursor = g.conn.execute("SELECT DISTINCT rule FROM determines_permissions")
+    rp = []
+    for result in cursor:
+        rp.append('Rule: ' + result['rule'])
+    cursor.close()
+    context = dict(data = rp)
+    return render_template("role_permissions.html", **context)
+
 
 if __name__ == "__main__":
     import click
