@@ -219,6 +219,9 @@ def add_profile():
     if not created_by_val(created_by)[0]:
         return redirect('/')
 
+    if len(first_name) == 0 or len(last_name) == 0:
+        return redirect('/')
+
     # insert new user into database
     cmd = 'INSERT INTO users(first_name, last_name, dob, location, department) VALUES (:first_name, :last_name, :dob, :location, :dept)'
     g.conn.execute(text(cmd), first_name = first_name, last_name = last_name, dob = dob, location = location, dept = dept)
