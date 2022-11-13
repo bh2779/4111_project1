@@ -32,6 +32,11 @@
         .box {
             position: absolute;
         }
+        .update_user{
+            position: absolute;
+            top: 300%;
+            left: 45%;
+        }
     </style>
 
     <body>
@@ -106,6 +111,22 @@
         <div class="del_user">
             <form method="POST" action="/user/{{data[0]}}/delete">
                 <input type="submit" value="Delete User">
+            </form>
+        </div>
+
+        <div class="update_user">
+            <h1>Update Account for this User</h1>
+            <form method="POST" action="/user/{{data[0]}}/update">
+            <p>New Location: <input type="text" name="location"></p>
+            <p>
+            <label for="dept">Department of new employee: </label>
+            <select name="dept" id="dept">
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="IT">IT</option>
+            </select>
+            </p>
+            <input type ="submit" value="Update" class="button">
             </form>
         </div>
     </body>

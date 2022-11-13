@@ -372,6 +372,25 @@ def delete_user(user_id):
     g.conn.execute("DELETE FROM users WHERE user_id = %s", str(user_id))
     return redirect('/')
 
+@app.route('/user/<int:user_id>/update', methods=['POST'])
+def update_user(user_id):
+    # get updated information and validate
+    redirect_address = f'/profile/{str(user_id)}'
+    location = request.form['location']
+    if len(location) > 0:
+        if not location_val(location)[0]:
+            return redirect(redirect_address)
+    dept = request.form['dept']
+    if len(dept) > 0:
+        if dept not in ['Sales', 'HR', 'IT']:
+            return redirect(redirect_address)
+    # add new data to database
+    if len(location) > 0:
+        g.conn.execute("UPDATE users SET location = %s WHERE user_id = %s", str(location), str(user_id))
+    if len(dept) > 0:
+        g.conn.execute("UPDATE users SET department = %s WHERE user_id = %s", str(dept), str(user_id))
+    return redirect(redirect_address)
+
 @app.route('/devices')
 def devices():
     cursor = g.conn.execute("SELECT device_id, device_type, vendor FROM device")
