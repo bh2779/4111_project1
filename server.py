@@ -337,6 +337,17 @@ def add_account(user_id):
     cursor.close()
     return profile(user_id)
 
+@app.route('/account/<int:account_id>/reset-password', methods=['POST'])
+def reset_password(account_id):
+    letters = string.ascii_letters
+    password = ''.join(random.choice(letters) for i in range(8))
+    g.conn.execute("UPDATE account SET password = %s WHERE account_id = %s", [password, str(account_id)])
+    user_id = -1
+    cursor = g.conn.execute("SELECT user_id FROM account WHERE account_id = %s", str(account_id))
+    for result in cursor:
+        user_id = result['user_id']
+    return redirect('/profile/' + str(user_id))
+
 @app.route('/account/<int:account_id>/delete', methods=['POST'])
 def delete_account(account_id):
     cursor = g.conn.execute("SELECT user_id FROM account WHERE account_id = %s", str(account_id))
@@ -451,6 +462,18 @@ def add_device():
     g.conn.execute(text(cmd), device_id = device_id, device_permissions_id = device_permissions_id)
     return redirect('/devices')
 
+@app.route('/device/<int:device_id>/update', methods=['POST'])
+def update_device(device_id):
+    operating_system = request.form['operating_system']
+    bios_version = request.form['bios_version']
+    if not software_val(bios_version)[0]:
+        return redirect('/device/' + str(device_id))
+    if len(operating_system) > 0:
+        g.conn.execute("UPDATE device SET operating_system = %s WHERE device_id = %s", [operating_system, str(device_id)])
+    if len(bios_version) > 0:
+        g.conn.execute("UPDATE device SET bios_version = %s WHERE device_id = %s", [bios_version, str(device_id)])
+    return device(device_id)
+
 @app.route('/device/<int:device_id>/delete', methods=['POST'])
 def delete_device(device_id):
     g.conn.execute("DELETE FROM accesses WHERE device_id = %s", str(device_id))
@@ -503,6 +526,30 @@ def add_software():
     cmd = 'INSERT INTO software(name, version, license, renew_date) VALUES (:name, :version, :license, :renew_date)'
     g.conn.execute(text(cmd), name = name, version = version, license = license, renew_date = renew_date)
     return redirect('/softwares')
+
+@app.route('/software/<int:sid>/update', methods=['POST'])
+def update_software(sid):
+    version = request.form['version']
+    if not version_val(version)[0]:
+        return redirect('/software/' + str(sid))
+    license = request.form['license']
+    if not name_val(license)[0]:
+        return redirect('/software/' + str(sid))
+    renew_date = request.form['renew_date']
+    if len(renew_date) > 0:
+        try:
+            year, month, day = renew_date.split('-')
+        except:
+            return redirect('/software/' + str(sid))
+        if not full_date_val(year, month, day)[0]:
+            return redirect('/software/' + str(sid))
+    if len(version) > 0:
+        g.conn.execute('UPDATE software SET version = %s WHERE sid = %s', [version, str(sid)])
+    if len(license) > 0:
+        g.conn.execute('UPDATE software SET license = %s WHERE sid = %s', [license, str(sid)])
+    if len(renew_date) > 0:
+        g.conn.execute('UPDATE software SET renew_date = %s WHERE sid = %s', [renew_date, str(sid)])
+    return software(sid)
 
 @app.route('/software/<int:sid>/delete', methods=['POST'])
 def delete_software(sid):
