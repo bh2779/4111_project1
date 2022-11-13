@@ -187,10 +187,6 @@ def add_profile():
     if not year_val(year)[0]:
         return redirect('/')
     # expanding these since the function fixes single value entries
-    # if not month_val(month)[0]:
-    #     return redirect('/')
-    # if not day_val(day)[0]:
-    #     return redirect('/')
     month_status, month = month_val(month)
     if not month_status:
         return redirect('/')
@@ -219,7 +215,6 @@ def add_profile():
     if role not in all_roles:
         return redirect('/')
 
-    # do we want to modify created by to be a list of the admins? (turns out it is a LOT of work)
     created_by = request.form['created_by']
     if not created_by_val(created_by)[0]:
         return redirect('/')
@@ -228,8 +223,7 @@ def add_profile():
     cmd = 'INSERT INTO users(first_name, last_name, dob, location, department) VALUES (:first_name, :last_name, :dob, :location, :dept)'
     g.conn.execute(text(cmd), first_name = first_name, last_name = last_name, dob = dob, location = location, dept = dept)
     # generate new account information for users
-    cmd = 'SELECT user_id FROM users WHERE first_name LIKE \'' + first_name + '\' AND last_name LIKE \'' + last_name + '\''
-    cursor = g.conn.execute(cmd)
+    cursor = g.conn.execute('SELECT user_id FROM users WHERE first_name LIKE %s AND last_name LIKE %s', [first_name, last_name])
     userid = 0
     for result in cursor:
         userid = result['user_id']
@@ -241,15 +235,14 @@ def add_profile():
     # insert into account table
     cmd = 'INSERT INTO account(email, password, username, created_date, user_id) VALUES (:email, :password, :username, :created_date, :user_id)'
     g.conn.execute(text(cmd), email = email, password = password, username = username, created_date = created_date, user_id = userid)
-    cmd = 'SELECT account_id FROM account WHERE user_id = ' + str(userid)
-    cursor = g.conn.execute(cmd)
+    cursor = g.conn.execute('SELECT account_id FROM account WHERE user_id = %s', str(userid))
     accountid = 0
     for result in cursor:
         accountid = result['account_id']
     # insert into assigned
     cmd = 'INSERT INTO assigned(account_id, user_id, created_by) VALUES (:account_id, :user_id, :created_by)'
     g.conn.execute(text(cmd), account_id = accountid, user_id = userid, created_by = created_by)
-    cursor = g.conn.execute('SELECT role_id FROM role WHERE role_name LIKE \'' + role + '\'')
+    cursor = g.conn.execute('SELECT role_id FROM role WHERE role_name LIKE %s', role)
     roleid = 0
     for result in cursor:
         roleid = result['role_id']
@@ -270,24 +263,24 @@ def profile(userid):
         user_info.append(result['first_name'] + ' ' + result['last_name'])
         user_info.append(result['location'])
         user_info.append(result['department'])
-    cursor = g.conn.execute("SELECT account_id, username, email FROM account WHERE user_id = " + str(userid))
+    cursor = g.conn.execute("SELECT account_id, username, email FROM account WHERE user_id = %s", str(userid))
     accounts = []
     for result in cursor:
         accounts.append([result['account_id'], result['username'], result['email']])
     user_info.append(accounts)
     for account in user_info[4]:
         account_id = account[0]
-        cursor = g.conn.execute("SELECT R.role_id, role_name, last_reviewed FROM role AS R JOIN belongs_to AS B ON R.role_id = B.role_id WHERE account_id = " + str(account_id))
+        cursor = g.conn.execute("SELECT R.role_id, role_name, last_reviewed FROM role AS R JOIN belongs_to AS B ON R.role_id = B.role_id WHERE account_id = %s", str(account_id))
         role_id = 0
         for result in cursor:
             role_id = result['role_id']
             account.append(result['role_name'] + ' (last reviewed on ' + str(result['last_reviewed']) + ')')
-        cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = " + str(userid))
+        cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = %s", str(userid))
         created_by = ""
         for result in cursor:
             created_by = result['created_by']
         account.append(created_by)
-        cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
+        cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = %s", str(role_id))
         access = False
         for result in cursor:
             if result['rule'] == 'confidential info access':
@@ -297,7 +290,7 @@ def profile(userid):
             account.append('True')
         else:
             account.append('False')
-        cursor = g.conn.execute("SELECT name, duration FROM software AS S JOIN authorized AS A ON S.sid = A.sid WHERE account_id = " + str(account_id))
+        cursor = g.conn.execute("SELECT name, duration FROM software AS S JOIN authorized AS A ON S.sid = A.sid WHERE account_id = %s", str(account_id))
         softwares = []
         for result in cursor:
             softwares.append(result['name'] + ' (authorized until ' + str(result['duration']) + ')')
@@ -323,7 +316,7 @@ def add_account(user_id):
     if not created_by_val(created_by)[0]:
         return redirect('/account/<int:user_id>/add')
     created_date = date.today()
-    cursor = g.conn.execute("SELECT first_name, last_name FROM users WHERE user_id = " + str(user_id))
+    cursor = g.conn.execute("SELECT first_name, last_name FROM users WHERE user_id = %s", str(user_id))
     first_name = ''
     last_name = ''
     for result in cursor:
@@ -339,7 +332,7 @@ def add_account(user_id):
     role_id = 0
     for result in cursor:
         role_id = result['role_id']
-    cursor = g.conn.execute('SELECT account_id FROM account WHERE user_id = ' + str(user_id) + " AND username LIKE '" + username + "' AND password LIKE '" + password + "'")
+    cursor = g.conn.execute('SELECT account_id FROM account WHERE user_id = %s AND username LIKE %s AND password LIKE %s', [str(user_id), username, password])
     account_id = 0
     for result in cursor:
         account_id = result['account_id']
@@ -352,31 +345,31 @@ def add_account(user_id):
 
 @app.route('/account/<int:account_id>/delete', methods=['POST'])
 def delete_account(account_id):
-    cursor = g.conn.execute("SELECT user_id FROM account WHERE account_id = " + str(account_id))
+    cursor = g.conn.execute("SELECT user_id FROM account WHERE account_id = %s", str(account_id))
     user_id = 0
     for result in cursor:
         user_id = result['user_id']
-    g.conn.execute("DELETE FROM belongs_to WHERE account_id = " + str(account_id))
-    g.conn.execute("DELETE FROM accesses WHERE account_id = " + str(account_id))
-    g.conn.execute("DELETE FROM assigned WHERE account_id = " + str(account_id))
-    g.conn.execute("DELETE FROM authorized WHERE account_id = " + str(account_id))
-    g.conn.execute("DELETE FROM account WHERE account_id = " + str(account_id))
+    g.conn.execute("DELETE FROM belongs_to WHERE account_id = %s", str(account_id))
+    g.conn.execute("DELETE FROM accesses WHERE account_id = %s", str(account_id))
+    g.conn.execute("DELETE FROM assigned WHERE account_id = %s", str(account_id))
+    g.conn.execute("DELETE FROM authorized WHERE account_id = %s", str(account_id))
+    g.conn.execute("DELETE FROM account WHERE account_id = %s", str(account_id))
     return profile(user_id)
 
 @app.route('/user/<int:user_id>/delete', methods=['POST'])
 def delete_user(user_id):
     account_ids = []
-    cursor = g.conn.execute("SELECT account_id FROM account WHERE user_id = " + str(user_id))
+    cursor = g.conn.execute("SELECT account_id FROM account WHERE user_id = %s", str(user_id))
     for result in cursor:
         account_ids.append(result['account_id'])
     for account_id in account_ids:
-        g.conn.execute("DELETE FROM belongs_to WHERE account_id = " + str(account_id))
-        g.conn.execute("DELETE FROM accesses WHERE account_id = " + str(account_id))
-        g.conn.execute("DELETE FROM assigned WHERE account_id = " + str(account_id))
-        g.conn.execute("DELETE FROM authorized WHERE account_id = " + str(account_id))
-        g.conn.execute("DELETE FROM account WHERE account_id = " + str(account_id))
-    g.conn.execute("DELETE FROM account WHERE user_id = " + str(user_id))
-    g.conn.execute("DELETE FROM users WHERE user_id = " + str(user_id))
+        g.conn.execute("DELETE FROM belongs_to WHERE account_id = %s", str(account_id))
+        g.conn.execute("DELETE FROM accesses WHERE account_id = %s", str(account_id))
+        g.conn.execute("DELETE FROM assigned WHERE account_id = %s", str(account_id))
+        g.conn.execute("DELETE FROM authorized WHERE account_id = %s", str(account_id))
+        g.conn.execute("DELETE FROM account WHERE account_id = %s", str(account_id))
+    g.conn.execute("DELETE FROM account WHERE user_id = %s", str(user_id))
+    g.conn.execute("DELETE FROM users WHERE user_id = %s", str(user_id))
     return redirect('/')
 
 @app.route('/devices')
@@ -391,24 +384,24 @@ def devices():
 
 @app.route('/device/<int:deviceid>')
 def device(deviceid):
-    cursor = g.conn.execute("SELECT * FROM device WHERE device_id = " + str(deviceid))
+    cursor = g.conn.execute("SELECT * FROM device WHERE device_id = %s", str(deviceid))
     device_info = []
     for result in cursor:
         device_info.append(result['device_id'])
         device_info.append(result['vendor'] + ' ' + result['device_type'])
         device_info.append(result['operating_system'])
         device_info.append(result['bios_version'])
-    cursor = g.conn.execute("SELECT scope, groups FROM defines AS D JOIN device_permissions AS P ON D.device_permissions_id = P.device_permissions_id WHERE device_id = " + str(deviceid))
+    cursor = g.conn.execute("SELECT scope, groups FROM defines AS D JOIN device_permissions AS P ON D.device_permissions_id = P.device_permissions_id WHERE device_id = %s", str(deviceid))
     for result in cursor:
         device_info.append(result['scope'])
         device_info.append(result['groups'])
-    cursor = g.conn.execute("SELECT account_id, login_timestamp FROM accesses AS A JOIN session AS S ON A.session_id = S.session_id WHERE device_id = " + str(deviceid))
+    cursor = g.conn.execute("SELECT account_id, login_timestamp FROM accesses AS A JOIN session AS S ON A.session_id = S.session_id WHERE device_id = %s", str(deviceid))
     timestamps = []
     for result in cursor:
         timestamps.append([result['login_timestamp'], result['account_id']])
     if len(timestamps) > 0:
         timestamps.sort()
-        cursor = g.conn.execute("SELECT username FROM account WHERE account_id = " + str(timestamps[-1][1]))
+        cursor = g.conn.execute("SELECT username FROM account WHERE account_id = %s", str(timestamps[-1][1]))
         username = ""
         for result in cursor:
             username = result['username']
@@ -419,12 +412,57 @@ def device(deviceid):
     context = dict(data = device_info)
     return render_template("device.html", **context)
 
+@app.route('/add-device', methods=['POST'])
+def add_device():
+    device_type = request.form['device_type']
+    operating_system = request.form['operating_system']
+    purchase_date = request.form['purchase_date']
+    bios_version = request.form['bios_version']
+    vendor = request.form['vendor']
+    scope = request.form['scope']
+    groups = request.form['groups']
+    if not name_val(vendor)[0]:
+        return redirect('/devices')
+    if not software_val(bios_version)[0]:
+        return redirect('/devices')
+    try:
+        year, month, day = purchase_date.split('-')
+    except:
+        return redirect('/devices')
+    if not year_val(year)[0]:
+        return redirect('/devices')
+    # expanding these since the function fixes single value entries
+    month_status, month = month_val(month)
+    if not month_status:
+        return redirect('/devices')
+    day_status, day = day_val(day)
+    if not day_status:
+        return redirect('/devices')
+    purchase_datetime = datetime(year=int(year), month=int(month), day=int(day))
+    if purchase_datetime > datetime.today() or purchase_datetime < datetime(year=1900, month=1, day=1):
+        return redirect('/devices')
+    cursor = g.conn.execute("SELECT device_permissions_id FROM device_permissions WHERE scope LIKE %s AND groups LIKE %s", [scope, groups])
+    device_permissions_id = -1
+    for result in cursor:
+        device_permissions_id = result['device_permissions_id']
+    if device_permissions_id == -1:
+        return redirect('/devices')
+    cmd = 'INSERT INTO device(device_type, purchase_date, operating_system, bios_version, vendor) VALUES (:device_type, :purchase_date, :operating_system, :bios_version, :vendor)'
+    g.conn.execute(text(cmd), device_type = device_type, purchase_date = purchase_date, operating_system = operating_system, bios_version = bios_version, vendor = vendor)
+    cursor = g.conn.execute("SELECT device_id FROM device WHERE bios_version LIKE %s", bios_version)
+    device_id = -1
+    for result in cursor:
+        device_id = result['device_id']
+    cmd = 'INSERT INTO defines(device_id, device_permissions_id) VALUES (:device_id, :device_permissions_id)'
+    g.conn.execute(text(cmd), device_id = device_id, device_permissions_id = device_permissions_id)
+    return redirect('/devices')
+
 @app.route('/device/<int:device_id>/delete', methods=['POST'])
 def delete_device(device_id):
-    g.conn.execute("DELETE FROM accesses WHERE device_id = " + str(device_id))
-    g.conn.execute("DELETE FROM defines WHERE device_id = " + str(device_id))
-    g.conn.execute("DELETE FROM accesses WHERE device_id = " + str(device_id))
-    g.conn.execute("DELETE FROM devices WHERE device_id = " + str(device_id))
+    g.conn.execute("DELETE FROM accesses WHERE device_id = %s", str(device_id))
+    g.conn.execute("DELETE FROM defines WHERE device_id = %s", str(device_id))
+    g.conn.execute("DELETE FROM accesses WHERE device_id = %s", str(device_id))
+    g.conn.execute("DELETE FROM device WHERE device_id = %s", str(device_id))
     return redirect('/devices')
 
 @app.route('/softwares')
@@ -439,7 +477,7 @@ def softwares():
 
 @app.route('/software/<int:sid>')
 def software(sid):
-    cursor = g.conn.execute("SELECT * FROM software WHERE sid = " + str(sid))
+    cursor = g.conn.execute("SELECT * FROM software WHERE sid = %s", str(sid))
     software_info = [sid]
     for result in cursor:
         software_info.append(result['name'])
@@ -474,8 +512,8 @@ def add_software():
 
 @app.route('/software/<int:sid>/delete', methods=['POST'])
 def delete_software(sid):
-    g.conn.execute("DELETE FROM authorized WHERE sid = " + str(sid))
-    g.conn.execute("DELETE FROM software WHERE sid = " + str(sid))
+    g.conn.execute("DELETE FROM authorized WHERE sid = %s", str(sid))
+    g.conn.execute("DELETE FROM software WHERE sid = %s", str(sid))
     return redirect('/softwares')
 
 @app.route('/roles')
@@ -491,11 +529,11 @@ def roles():
 @app.route('/role/<int:role_id>')
 def role(role_id):
     role_info = []
-    cursor = g.conn.execute("SELECT role_name FROM role WHERE role_id = " + str(role_id))
+    cursor = g.conn.execute("SELECT role_name FROM role WHERE role_id = %s", str(role_id))
     for result in cursor:
         role_info.append(result['role_name'])
     permissions = []
-    cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = " + str(role_id))
+    cursor = g.conn.execute("SELECT rule FROM determines_permissions WHERE role_id = %s", str(role_id))
     for result in cursor:
         permissions.append(result['rule'])
     role_info.append(permissions)
