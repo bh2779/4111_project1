@@ -15,9 +15,9 @@
             margin-top: 10px;
             font-size: 12pt;
         }
-        .button {
+        /* .button {
             margin-top: 10px;
-        }
+        } */
         .new_account {
             position: absolute;
             left: 45%;
@@ -31,6 +31,13 @@
         }
         .box {
             position: absolute;
+        }
+        .delete {
+            margin-top: 10px;
+            margin-bottom: 0px;
+        }
+        .reset {
+            margin-top: 10px;
         }
         .update_user{
             position: absolute;
@@ -52,32 +59,37 @@
                 {{data[3]}}
             </div>
             {% for n in data[4] %}
-            <h2>Account {{n[1]}}</h2>
-            <div class="info">
-                <b>Position: </b>
-                {{n[3]}}
+            <div class="account_box">
+                <h2>Account {{n[1]}}</h2>
+                <div class="info">
+                    <b>Position: </b>
+                    {{n[3]}}
+                </div>
+                <div class="info">
+                    <b>Email: </b>
+                    {{n[2]}}
+                </div>
+                <div class="info">
+                    <b>Access to Confidential Info: </b>
+                    {{n[5]}}
+                </div>
+                <div class="info">
+                    <b>Authorized Software: </b>
+                    {% for s in n[6] %}
+                    <div class="software">{{s}}</div>
+                    {% endfor %}
+                </div>
+                <div class="info">
+                    <b>Account created by: </b>
+                    {{n[4]}}
+                </div>
+                <form class="delete" method="POST" action="/account/{{n[0]}}/delete">
+                    <input type="submit" value="Delete Account" class="button">
+                </form>
+                <form class="reset" method="POST" action="/account/{{n[0]}}/reset-password">
+                    <input type="submit" value="Reset Password" class="button">
+                </form>
             </div>
-            <div class="info">
-                <b>Email: </b>
-                {{n[2]}}
-            </div>
-            <div class="info">
-                <b>Access to Confidential Info: </b>
-                {{n[5]}}
-            </div>
-            <div class="info">
-                <b>Authorized Software: </b>
-                {% for s in n[6] %}
-                <div class="software">{{s}}</div>
-                {% endfor %}
-            </div>
-            <div class="info">
-                <b>Account created by: </b>
-                {{n[4]}}
-            </div>
-            <form method="POST" action="/account/{{n[0]}}/delete">
-                <input type="submit" value="Delete Account" class="button">
-            </form>
             {% endfor %}
             <p class="back"><a href="/">Back to people</a></p>
         </div>

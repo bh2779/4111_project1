@@ -17,6 +17,9 @@
         .button {
             margin-top: 20px;
         }
+        .update_button {
+            margin-top: 0px;
+        }
     </style>
 
     <body>
@@ -48,6 +51,24 @@
         <form method="POST" action="/device/{{data[0]}}/delete">
             <input type="submit" value="Delete Device" class="button">
         </form>
+        
+        <div class="update_device">
+            <h2>Update Device</h2>
+            <form method="POST" action="/device/{{data[0]}}/update">
+                <p>
+                    <label for="operating_system">Operating System: </label>
+                    <select name="operating_system" id="operating_system">
+                      <option value="Window">Window</option>
+                      <option value="Linux">Linux</option>
+                      <option value="macOS">macOS</option>
+                      <option value="iPad OS">iPad OS</option>
+                      <option value="iOS">iOS</option>
+                    </select>
+                </p>
+              <p>BIOS Version: <input type="text" name="bios_version"></p>
+              <input type="submit" value="Update" class="update_button">
+            </form>
+        </div>
         <p><a href="/devices">Back to devices</a></p>
     </body>
 </html>

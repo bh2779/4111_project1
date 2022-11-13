@@ -13,6 +13,9 @@
         .button {
             margin-top: 20px;
         }
+        .update_button {
+            margin-top: 0px;
+        }
     </style>
 
     <body>
@@ -33,6 +36,15 @@
         <form method="POST" action="/software/{{data[0]}}/delete">
             <input type="submit" value="Delete Software" class="button">
         </form>
+        <div class="update_software">
+            <h2>Update Software</h2>
+            <form method="POST" action="/software/{{data[0]}}/update">
+              <p>Version: <input type="text" name="version"></p>
+              <p>License: <input type="text" name="license"></p>
+              <p>Renew Date: <input type="text" name="renew_date"></p>
+              <input type="submit" value="Update" class="update_button">
+            </form>
+        </div>
         <p><a href="/softwares">Back to all software</a></p>
     </body>
 </html>
