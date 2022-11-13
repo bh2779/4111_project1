@@ -275,7 +275,7 @@ def profile(userid):
         for result in cursor:
             role_id = result['role_id']
             account.append(result['role_name'] + ' (last reviewed on ' + str(result['last_reviewed']) + ')')
-        cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = %s", str(userid))
+        cursor = g.conn.execute("SELECT created_by FROM assigned WHERE user_id = %s AND account_id = %s", [str(userid), str(account_id)])
         created_by = ""
         for result in cursor:
             created_by = result['created_by']
@@ -328,7 +328,7 @@ def add_account(user_id):
     password = ''.join(random.choice(letters) for i in range(8))
     cmd = 'INSERT INTO account(email, password, username, created_date, user_id) VALUES (:email, :password, :username, :created_date, :user_id)'
     g.conn.execute(text(cmd), email = email, password = password, username = username, created_date = created_date, user_id = user_id)
-    cursor = g.conn.execute("SELECT role_id FROM role WHERE role_name LIKE '" + role + "'")
+    cursor = g.conn.execute("SELECT role_id FROM role WHERE role_name LIKE %s", role)
     role_id = 0
     for result in cursor:
         role_id = result['role_id']
