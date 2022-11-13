@@ -93,7 +93,10 @@ def full_date_val(year, month, day):
     valid_date = None
     try:
         input_date = datetime(year=int(year), month=int(month), day=int(day))
-        valid_date = True
+        if input_date.year < 2000:
+            valid_date = False
+        else:
+            valid_date = True
     except ValueError:
         valid_date = False
     if valid_date == False:
@@ -194,8 +197,11 @@ def add_profile():
     day_status, day = day_val(day)
     if not day_status:
         return redirect('/')
-    dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
-    if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
+    try:
+        dob_datetime = datetime(year=int(year), month=int(month), day=int(day))
+        if dob_datetime > datetime.today() or dob_datetime < datetime(year=1900, month=1, day=1):
+            return redirect('/')
+    except:
         return redirect('/')
 
     location = request.form['location']
