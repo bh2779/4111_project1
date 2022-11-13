@@ -6,10 +6,17 @@
       position: absolute;
       top: 5%;
       left: 5%;
+      width: 100%;
     }
     .links {
       /* margin-left: 200px; */
       line-height: 50%;
+    }
+    .new_device {
+      position: absolute;
+      left: 50%;
+      width: 100%;
+      top: -4%;
     }
   </style>
 
@@ -48,6 +55,35 @@
       <p>Purchase Date: <input type="text" name="purchase_date"></p>
       <p>BIOS Version: <input type="text" name="bios_version"></p>
       <p>Vendor: <input type="text" name="vendor"></p>
+      <p>
+        <label for="scope">Device Permissions - Scope: </label>
+        <select name="scope" id="scope">
+          <option value="user">User</option>
+          <option value="static">Static</option>
+          <option value="admin">Admin</option>
+        </select>
+      </p>
+      <p>
+        <label for="groups">Device Permissions - Group: </label>
+        <select name="groups" id="groups">
+          <option value="laptop_mac">laptop_mac</option>
+          <option value="laptop_win">laptop_win</option>
+          <option value="laptop_lin">laptop_lin</option>
+          <option value="desktop_mac">desktop_mac</option>
+          <option value="desktop_win">desktop_win</option>
+          <option value="desktop_lin">desktop_lin</option>
+          <option value="tablet_app">tablet_app</option>
+          <option value="tablet_and">tablet_and</option>
+          <option value="tablet_win">tablet_win</option>
+          <option value="phone_mobile_app">phone_mobile_app</option>
+          <option value="phone_mobile_and">phone_mobile_and</option>
+          <option value="phone_voip">phone_voip</option>
+          <option value="printer">printer</option>
+          <option value="vtc">vtc</option>
+          <option value="vtc">vtc</option>
+        </select>
+      </p>
+      <input type="submit" value="Add" class="button">
     </form>
   </div>
 
