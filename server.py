@@ -314,7 +314,7 @@ def add_account(user_id):
         return redirect('/')
     created_by = request.form['created_by']
     if not created_by_val(created_by)[0]:
-        return redirect('/account/<int:user_id>/add')
+        return redirect('/profile/' + str(user_id))
     created_date = date.today()
     cursor = g.conn.execute("SELECT first_name, last_name FROM users WHERE user_id = %s", str(user_id))
     first_name = ''
@@ -533,15 +533,17 @@ def software(sid):
 @app.route('/add-software', methods=['POST'])
 def add_software():
     name = request.form['name']
-    if not software_val(name)[0]:
+    if len(name) == 0 or not software_val(name)[0]:
         return redirect('/softwares')
     version = request.form['version']
     if not version_val(version)[0]:
         return redirect('/softwares')
     license = request.form['license']
-    if not name_val(license)[0]:
+    if len(license) == 0 or not name_val(license)[0]:
         return redirect('/softwares')
     renew_date = request.form['renew_date']
+    if len(renew_date) == 0:
+        return redirect('/softwares')
     try:
         year, month, day = renew_date.split('-')
     except:
